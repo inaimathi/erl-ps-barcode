@@ -16,7 +16,7 @@ change(TableId) -> gen_server:call(?MODULE, {change, TableId}).
 handle_call(help, _From, State) ->
     {reply, ets:match(State, {'$1', encoder, '_', '_', '_', '_'}), State};
 handle_call({help, BarcodeType}, _From, State) ->
-    {reply, ets:match(State, {BarcodeType, encoder, '_', '$2', '_', '_'}), State};
+    {reply, ets:match(State, {BarcodeType, encoder, '_', '$1', '_', '_'}), State};
 handle_call({write, BarcodeType, Data}, _From, State) ->
     Fname = string:strip(os:cmd("mktemp"), right, $\n),
     {ok, File} = file:open(Fname, [append]),
