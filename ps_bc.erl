@@ -13,21 +13,6 @@ help(BarcodeType) -> gen_server:call(?MODULE, {help, BarcodeType}).
 write(BarcodeType, Data) -> gen_server:call(?MODULE, {write, BarcodeType, Data}).
 change(TableId) -> gen_server:call(?MODULE, {change, TableId}).    
 
-
-write_component(preamble, Table, File) ->
-    [[Pre]] = ets:match(Table, {preamble, '$1'}),
-    file:write(File, Pre);
-write_component(Name, Table, File) -> 
-    file:write(File, lookup_component(Name, Table)).
-		     
-lookup_component(Name, Table) -> 
-    Ren = ets:match(Table, {Name, renderer, '$1'}),
-    Enc = ets:match(Table, {Name, encoder, '_', '_', '_', '$1'}),
-    case {Ren, Enc} of
-	{[], [[Res]]} -> Res;
-	{[[Res]], []} -> Res
-    end.	    
-
 handle_call(help, _From, State) ->
     {reply, ets:match(State, {'$1', encoder, '_', '_', '_', '_'}), State};
 handle_call({help, BarcodeType}, _From, State) ->
@@ -41,12 +26,31 @@ handle_call({write, BarcodeType, Data}, _From, State) ->
     file:write(File, "\n/Helvetica findfont 10 scalefont setfont\n"),
     lists:map(fun (C) -> write_component(C, State, File) end, CompList),
     write_component(BarcodeType, State, File),
-    io:format(File, "10 10 moveto (~s) (~s) /~s /uk.co.terryburton.bwipp findresource exec showpage",
-	      [Data, string:join(ExArgs, " "), BarcodeType]),
+    write_barcode(File, BarcodeType, ExArgs, Data),
     file:close(File),
     {reply, Fname, State};
 handle_call({change_table, Tab}, _From, _State) ->
     {reply, {watching_table, Tab}, Tab}.
+
+write_component(preamble, Table, File) ->
+    [[Pre]] = ets:match(Table, {preamble, '$1'}),
+    file:write(File, Pre);
+write_component(Name, Table, File) -> 
+    file:write(File, lookup_component(Name, Table)).
+
+write_barcode(File, datamatrix, _, Data) ->
+    io:format(File, "10 10 moveto (~s) () /datamatrix /uk.co.terryburton.bwipp findresource exec showpage", [Data]);
+write_barcode(File, BarcodeType, ExArgs, Data) ->
+    io:format(File, "10 10 moveto (~s) (~s) /~s /uk.co.terryburton.bwipp findresource exec showpage",
+	      [Data, string:join(ExArgs, " "), BarcodeType]).
+		     
+lookup_component(Name, Table) -> 
+    Ren = ets:match(Table, {Name, renderer, '$1'}),
+    Enc = ets:match(Table, {Name, encoder, '_', '_', '_', '$1'}),
+    case {Ren, Enc} of
+	{[], [[Res]]} -> Res;
+	{[[Res]], []} -> Res
+    end.
 
 %%%%%%%%%%%%%%%%%%%% generic actions
 start() -> gen_server:start_link({local, ?MODULE}, ?MODULE, [], []). %% {local/global, Name}, Mod, InitArgs, Opts

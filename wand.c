@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <wand/MagickWand.h>
 
+/* A collection of functions useful for image transformation */
+/* Only generically useful procedures go here                */
+
 #define ThrowWandException(wand, ret) \
 { \
   char \
@@ -37,8 +40,8 @@ char *chop_path(char *orig, char *addition) {
 int determine_padding(int width, int height){
   int w_pad, h_pad;
 
-  w_pad = width / 20;
-  h_pad = height / 20;
+  w_pad = width / 10;
+  h_pad = height / 10;
 
   if(w_pad > h_pad){
     return round(w_pad);
@@ -60,7 +63,7 @@ int barcode_to_png (char *image_name) {
   status = MagickReadImage(magick_wand, image_name);
   if (status == MagickFalse) ThrowWandException(magick_wand, 1);
 
-  /* trim the image, resample it, and pad it by [5% of the long side] per side */
+  /* trim the image, resample it, and pad it by [10% of the long side] per side */
   MagickTrimImage(magick_wand, 10);
   MagickResampleImage(magick_wand, 300, 300, CatromFilter, 0.5);
   width = MagickGetImageWidth(magick_wand);
@@ -69,7 +72,7 @@ int barcode_to_png (char *image_name) {
   half_pad = round(pad/2);
   MagickExtentImage(magick_wand, width+pad, height+pad, -half_pad, -half_pad);
   
-  /* write image */
+  /* write image (a PNG version and a formatted PS version) */
   status=MagickWriteImage(magick_wand, chop_path(image_name, ".png"));
   if (status == MagickFalse) ThrowWandException(magick_wand, 2);
   status=MagickWriteImage(magick_wand, chop_path(image_name, ".ps"));
