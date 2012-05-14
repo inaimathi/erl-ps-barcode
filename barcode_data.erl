@@ -3,7 +3,7 @@
 -export([export_ets_file/1, import_ets_file/0]).
 
 export_ets_file(Table) -> ets:tab2file(Table, "ps-barcode-blocks").
-import_ets_file() -> {ok, Tab} = ets:file2tab("ps-barcode-blocks"), Tab.
+import_ets_file() -> {ok, Tab} = ets:file2tab(filename:absname("ps-barcode-blocks")), Tab.
 
 read_default_file() -> read_file("barcode.ps").
 read_file(Filename) ->

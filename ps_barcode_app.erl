@@ -2,5 +2,5 @@
 -behaviour(application).
 -export([start/2, stop/1]).
 
-start(_Type, StartArgs) -> ps_bc_supervisor:start_link(StartArgs).
+start(_Type, StartArgs) -> ps_barcode_supervisor:start_link(StartArgs).
 stop(_State) -> ok.

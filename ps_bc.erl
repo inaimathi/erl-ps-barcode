@@ -3,23 +3,28 @@
 -behaviour(gen_server).
 
 -export([start/0, stop/0]).
--export([init/1, handle_call/3, handle_cast/2, handle_info/2,
-	 terminate/2, code_change/3]).
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
--export([help/0, help/1, write/2, change/1]).
+-export([help/0, help/1, write/3, generate/2, generate/3, change/1, make_tempname/0]).
 
 help() -> gen_server:call(?MODULE, help).
 help(BarcodeType) -> gen_server:call(?MODULE, {help, BarcodeType}).
-write(BarcodeType, Data) -> gen_server:call(?MODULE, {write, BarcodeType, Data}).
+write(DestFolder, BarcodeType, Data) -> gen_server:call(?MODULE, {write, DestFolder, BarcodeType, Data}).
+generate(BarcodeType, Data) -> generate("/tmp/", BarcodeType, Data).
+generate(DestFolder, BarcodeType, Data) -> 
+    NameOfTempFile = write(DestFolder, BarcodeType, Data),
+    wand:process(NameOfTempFile),
+    NameOfTempFile.
 change(TableId) -> gen_server:call(?MODULE, {change, TableId}).    
 
 handle_call(help, _From, State) ->
     {reply, ets:match(State, {'$1', encoder, '_', '_', '_', '_'}), State};
 handle_call({help, BarcodeType}, _From, State) ->
     {reply, ets:match(State, {BarcodeType, encoder, '_', '$1', '_', '_'}), State};
-handle_call({write, BarcodeType, Data}, _From, State) ->
-    Fname = string:strip(os:cmd("mktemp"), right, $\n),
-    {ok, File} = file:open(Fname, [append]),
+handle_call({write, DestFolder, BarcodeType, Data}, _From, State) ->
+    %% string:strip(os:cmd("mktemp -p /home/inaimathi/nitrogen/rel/nitrogen/site/static/images"), right, $\n),
+    Fname = make_tempname(DestFolder),
+    {ok, File} = file:open(Fname, [write, exclusive]),
     [[{requires, CompList}, {def_arg, ExArgs}]] = ets:match(State, {BarcodeType, encoder, '$1', '_', '$2', '_'}),
     file:write(File, "%!PS-Adobe-2.0\n%%BoundingBox: 0 0 200 200\n%%LanguageLevel: 2\n"),
     write_component(preamble, State, File),
@@ -32,17 +37,25 @@ handle_call({write, BarcodeType, Data}, _From, State) ->
 handle_call({change_table, Tab}, _From, _State) ->
     {reply, {watching_table, Tab}, Tab}.
 
+make_tempname() ->
+    {A, B, C} = now(),
+    [D, E, F] = lists:map(fun integer_to_list/1, [A, B, C]),
+    lists:append(["tmp.", D, ".", E, ".", F]).
+make_tempname(TargetDir) ->
+    filename:absname_join(TargetDir, make_tempname()).
+
 write_component(preamble, Table, File) ->
     [[Pre]] = ets:match(Table, {preamble, '$1'}),
     file:write(File, Pre);
 write_component(Name, Table, File) -> 
     file:write(File, lookup_component(Name, Table)).
 
-write_barcode(File, datamatrix, _, Data) ->
-    io:format(File, "10 10 moveto (~s) () /datamatrix /uk.co.terryburton.bwipp findresource exec showpage", [Data]);
-write_barcode(File, BarcodeType, ExArgs, Data) ->
+write_barcode(File, datamatrix, _, Data)	-> format_barcode_string(File, datamatrix, "", Data);
+write_barcode(File, BarcodeType, ExArgs, Data)	-> format_barcode_string(File, BarcodeType, string:join(ExArgs, " "), Data).
+
+format_barcode_string(File, BarcodeType, ExArgString, DataString) ->
     io:format(File, "10 10 moveto (~s) (~s) /~s /uk.co.terryburton.bwipp findresource exec showpage",
-	      [Data, string:join(ExArgs, " "), BarcodeType]).
+	      [DataString, ExArgString, BarcodeType]).
 		     
 lookup_component(Name, Table) -> 
     Ren = ets:match(Table, {Name, renderer, '$1'}),

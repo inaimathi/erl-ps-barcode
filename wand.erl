@@ -28,7 +28,7 @@ start() -> gen_server:start_link({local, ?MODULE}, ?MODULE, [], []). %% {local/g
 stop() -> gen_server:call(?MODULE, stop).
 
 %%%%%%%%%%%%%%%%%%%% gen_server handlers
-init([]) -> {ok, open_port({spawn, "./wand"}, [{packet, 2}])}.
+init([]) -> {ok, open_port({spawn, filename:absname("wand")}, [{packet, 2}])}.
 handle_cast(_Msg, State) -> {noreply, State}.
 handle_info(_Info, State) -> {noreply, State}.
 terminate(_Reason, _State) -> ok.

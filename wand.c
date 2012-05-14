@@ -60,12 +60,12 @@ int barcode_to_png (char *image_name) {
   /* read a barcode image */
   MagickWandGenesis();
   magick_wand = NewMagickWand();
+  MagickSetResolution(magick_wand, 300, 300);
   status = MagickReadImage(magick_wand, image_name);
   if (status == MagickFalse) ThrowWandException(magick_wand, 1);
 
   /* trim the image, resample it, and pad it by [10% of the long side] per side */
   MagickTrimImage(magick_wand, 10);
-  MagickResampleImage(magick_wand, 300, 300, CatromFilter, 0.5);
   width = MagickGetImageWidth(magick_wand);
   height = MagickGetImageHeight(magick_wand);
   pad = determine_padding(width, height);
