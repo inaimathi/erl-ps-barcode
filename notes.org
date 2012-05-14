@@ -1,0 +1,22 @@
+
+* Dependencies
+
+** Relies on 
+   libmagickwand-dev
+
+* Notes  
+** DONE get `write` and `generate` to optionally take a destination directory to generate files in
+   CLOSED: [2012-05-13 Sun 13:41]
+   - CLOSING NOTE [2012-05-13 Sun 13:42] \\
+     `generate` now optionally takes a destination, and `write` takes a mandatory destination.
+** DONE use the `{A, B, C} = now().` + composing method to generate tempfile names rather than the built-in mktemp
+   CLOSED: [2012-05-13 Sun 13:42]
+   - CLOSING NOTE [2012-05-13 Sun 13:43] \\
+     Defined my own `make_tempname` which uses the Erlang `now()` to generate a unique filename
+** TODO have `generate` return a list of relative files generated rather than the base name
+** TODO give ps_bc options to return
+*** TODO list of all available barcode types
+*** TODO example input for a given barcode type
+** Perf Testing
+   It seems that calling ps_bc:write a second time to output the properly sized image is actually FASTER than calling os:cmd to do `sed` tricks.
+   This probably means that it will also be faster than letting imagemagick trim the PS file, given that it involves calling the rasteriser and outputting.

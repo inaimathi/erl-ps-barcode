@@ -5,11 +5,14 @@
 -export([start/0, stop/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
--export([help/0, help/1, write/3, generate/2, generate/3, change/1, make_tempname/0]).
+-export([help/0, help/1, write/3, write/5, generate/2, generate/3, change/1, make_tempname/0]).
 
 help() -> gen_server:call(?MODULE, help).
 help(BarcodeType) -> gen_server:call(?MODULE, {help, BarcodeType}).
-write(DestFolder, BarcodeType, Data) -> gen_server:call(?MODULE, {write, DestFolder, BarcodeType, Data}).
+write(DestFolder, BarcodeType, Data) -> 
+    write(DestFolder, BarcodeType, Data, 200, 200).
+write(DestFolder, BarcodeType, Data, Width, Height) ->
+    gen_server:call(?MODULE, {write, DestFolder, BarcodeType, Data, Width, Height}).
 generate(BarcodeType, Data) -> generate("/tmp/", BarcodeType, Data).
 generate(DestFolder, BarcodeType, Data) -> 
     NameOfTempFile = write(DestFolder, BarcodeType, Data),
@@ -21,12 +24,12 @@ handle_call(help, _From, State) ->
     {reply, ets:match(State, {'$1', encoder, '_', '_', '_', '_'}), State};
 handle_call({help, BarcodeType}, _From, State) ->
     {reply, ets:match(State, {BarcodeType, encoder, '_', '$1', '_', '_'}), State};
-handle_call({write, DestFolder, BarcodeType, Data}, _From, State) ->
+handle_call({write, DestFolder, BarcodeType, Data, Width, Height}, _From, State) ->
     %% string:strip(os:cmd("mktemp -p /home/inaimathi/nitrogen/rel/nitrogen/site/static/images"), right, $\n),
     Fname = make_tempname(DestFolder),
     {ok, File} = file:open(Fname, [write, exclusive]),
     [[{requires, CompList}, {def_arg, ExArgs}]] = ets:match(State, {BarcodeType, encoder, '$1', '_', '$2', '_'}),
-    file:write(File, "%!PS-Adobe-2.0\n%%BoundingBox: 0 0 200 200\n%%LanguageLevel: 2\n"),
+    file:write(File, io_lib:format("%!PS-Adobe-2.0\n%%BoundingBox: 0 0 ~w ~w\n%%LanguageLevel: 2\n", [Width, Height])),
     write_component(preamble, State, File),
     file:write(File, "\n/Helvetica findfont 10 scalefont setfont\n"),
     lists:map(fun (C) -> write_component(C, State, File) end, CompList),
