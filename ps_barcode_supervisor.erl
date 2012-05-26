@@ -13,7 +13,12 @@ start_for_testing() ->
 start_link(Args) ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, Args).
 
+
 init([]) ->
+    case filelib:is_regular(filename:absname("ps-barcode-blocks")) of
+	false -> barcode_data:export_ets_file(barcode_data:read_default_file());
+	true -> ok
+    end,
     {ok, {{one_for_one, 3, 10},
 	  [{tag1, 
 	    {wand, start, []},
