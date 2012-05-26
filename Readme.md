@@ -13,7 +13,7 @@ Some barcodes still don't work. These include `isbn` and `ean13composite`. Proba
 
 You should now have a working barcode generator. 
 
-`ps_bc:help/0` will list all available barcode types
-`ps_bc:help/1` takes a barcode type and returns an example argument for that barcode type
-`ps_bc:generate/2` takes a barcode type and a string and generates a barcode containing that string
-`ps_bc:generate/3` takes `DestFolder`, `BarcodeType` and `Data` (a string) and generates the appropriate barcode in the `DestFolder` directory
+- `ps_bc:help/0` will list all available barcode types
+- `ps_bc:help/1` takes a barcode type and returns an example argument for that barcode type
+- `ps_bc:generate/2` takes a barcode type and a string and generates a barcode containing that string
+- `ps_bc:generate/3` takes `DestFolder`, `BarcodeType` and `Data` (a string) and generates the appropriate barcode in the `DestFolder` directory
