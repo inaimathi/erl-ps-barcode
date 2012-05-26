@@ -17,13 +17,14 @@ generate(BarcodeType, Data) -> generate("/tmp/", BarcodeType, Data).
 generate(DestFolder, BarcodeType, Data) -> 
     NameOfTempFile = write(DestFolder, BarcodeType, Data),
     wand:process(NameOfTempFile),
-    NameOfTempFile.
+    {NameOfTempFile, string:concat(NameOfTempFile, ".png"), string:concat(NameOfTempFile, ".ps")}.
 change(TableId) -> gen_server:call(?MODULE, {change, TableId}).    
 
 handle_call(help, _From, State) ->
-    {reply, ets:match(State, {'$1', encoder, '_', '_', '_', '_'}), State};
+    {reply, lists:append(ets:match(State, {'$1', encoder, '_', '_', '_', '_'})), State};
 handle_call({help, BarcodeType}, _From, State) ->
-    {reply, ets:match(State, {BarcodeType, encoder, '_', '$1', '_', '_'}), State};
+    [[{example, Example}]] = ets:match(State, {BarcodeType, encoder, '_', '$1', '_', '_'}),
+    {reply, Example, State};
 handle_call({write, DestFolder, BarcodeType, Data, Width, Height}, _From, State) ->
     %% string:strip(os:cmd("mktemp -p /home/inaimathi/nitrogen/rel/nitrogen/site/static/images"), right, $\n),
     Fname = make_tempname(DestFolder),
