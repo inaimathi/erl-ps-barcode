@@ -6,7 +6,7 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -export([test/0, test/1]).
--export([help/0, help/1, write/3, write/5, generate/2, generate/3, change/1, make_tempname/0]).
+-export([help/0, help/1, write/3, write/5, generate/2, generate/3, change/1]).
 
 help() -> gen_server:call(?MODULE, help).
 help(BarcodeType) -> gen_server:call(?MODULE, {help, BarcodeType}).
