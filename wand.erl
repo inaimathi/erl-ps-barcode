@@ -15,6 +15,8 @@ handle_call({process_barcode, Filename}, _From, State) ->
     receive
 	{State, {data, Data}} ->
 	    {reply, decode(Data), State}
+    after 3000 ->
+	    exit(wand_timeout)
     end;
 handle_call({'EXIT', _Port, Reason}, _From, _State) ->
     exit({port_terminated, Reason}).
@@ -24,12 +26,12 @@ decode([1]) -> {error, could_not_read};
 decode([2]) -> {error, could_not_write}.
 
 %%%%%%%%%%%%%%%%%%%% generic actions
-start() -> gen_server:start_link({local, ?MODULE}, ?MODULE, [], []). %% {local/global, Name}, Mod, InitArgs, Opts
+start() -> gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 stop() -> gen_server:call(?MODULE, stop).
 
 %%%%%%%%%%%%%%%%%%%% gen_server handlers
 init([]) -> {ok, open_port({spawn, filename:absname("wand")}, [{packet, 2}])}.
 handle_cast(_Msg, State) -> {noreply, State}.
 handle_info(_Info, State) -> {noreply, State}.
-terminate(_Reason, _State) -> ok.
+terminate(_Reason, State) -> State ! {self(), close}, ok.
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
