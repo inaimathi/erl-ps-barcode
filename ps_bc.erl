@@ -5,6 +5,7 @@
 -export([start/0, stop/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
+-export([test/0, test/1]).
 -export([help/0, help/1, write/3, write/5, generate/2, generate/3, change/1, make_tempname/0]).
 
 help() -> gen_server:call(?MODULE, help).
@@ -19,6 +20,11 @@ generate(DestFolder, BarcodeType, Data) ->
     wand:process(NameOfTempFile),
     {NameOfTempFile, string:concat(NameOfTempFile, ".png"), string:concat(NameOfTempFile, ".ps")}.
 change(TableId) -> gen_server:call(?MODULE, {change, TableId}).    
+
+test() -> lists:map(fun(BarcodeType) -> test(BarcodeType) end, help()).
+test(BarcodeType) -> 
+    io:format("testing :: ~s\n", [BarcodeType]),
+    generate(BarcodeType, help(BarcodeType)).
 
 handle_call(help, _From, State) ->
     {reply, lists:append(ets:match(State, {'$1', encoder, '_', '_', '_', '_'})), State};
